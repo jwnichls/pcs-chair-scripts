@@ -34,8 +34,8 @@ def analyze_reviewers(file_path):
 
             # Iterate over each row in the CSV file
             for row in reader:
-                #if row.get("Decision", "") != "RER" and row.get("Decision", "") != "ERER":
-                #    continue
+                if row.get("Decision", "") != "RER" and row.get("Decision", "") != "ERER":
+                    continue
 
                 # Process static Reviewer columns
                 for column in static_columns_to_analyze:

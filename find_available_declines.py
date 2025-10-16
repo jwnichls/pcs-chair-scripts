@@ -17,7 +17,7 @@ def main():
     Main function to parse command-line arguments and run the data processing logic.
     """
     parser = argparse.ArgumentParser(description='Process submission and email log data.')
-    parser.add_argument('date_to_filter', type=str, help='A date string to filter the email log file.')
+    parser.add_argument('date_to_filter', type=str, help='A date string to filter the email log file (YYYY-MM-DD).')
     parser.add_argument('submissions_csv_path', type=str, help='Path to the submissions CSV file.')
     parser.add_argument('email_log_csv_path', type=str, help='Path to the email log CSV file.')
 
