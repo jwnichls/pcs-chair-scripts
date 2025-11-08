@@ -3,7 +3,7 @@ import sys
 import re
 from collections import Counter
 
-def analyze_reviewers(file_path):
+def analyze_reviewers(file_path, no_adr):
     """
     Reads a CSV file, collects values from 'Reviewer 1', 'Reviewer 2', and 'Reviewer 3'
     columns, and any columns matching the pattern 'E<number>name'. It handles
@@ -34,7 +34,7 @@ def analyze_reviewers(file_path):
 
             # Iterate over each row in the CSV file
             for row in reader:
-                if row.get("Decision", "") != "RER" and row.get("Decision", "") != "ERER":
+                if no_adr and row.get("Decision", "") != "RER" and row.get("Decision", "") != "ERER":
                     continue
 
                 # Process static Reviewer columns
@@ -85,4 +85,5 @@ if __name__ == "__main__":
         sys.exit(1)
 
     csv_file_path = sys.argv[1]
-    analyze_reviewers(csv_file_path)
+    adr_flag = (len(sys.argv) > 2 and sys.argv[2] == "--no-adr")
+    analyze_reviewers(csv_file_path, adr_flag)

@@ -20,6 +20,7 @@ def main():
     parser.add_argument('date_to_filter', type=str, help='A date string to filter the email log file (YYYY-MM-DD).')
     parser.add_argument('submissions_csv_path', type=str, help='Path to the submissions CSV file.')
     parser.add_argument('email_log_csv_path', type=str, help='Path to the email log CSV file.')
+    parser.add_argument('-na', '--no-adr', action='store_true', help='do not include papers with ADR decision')
 
     args = parser.parse_args()
 
@@ -29,14 +30,17 @@ def main():
     try:
         # Step 1: Call analyze_reviewers.py and capture its stdout
         analyze_script_path = os.path.join(script_dir, "analyze_reviewers.py")
+        analyze_script_args = [sys.executable, analyze_script_path, args.submissions_csv_path]
+        if args.no_adr:
+            analyze_script_args.append('--no-adr')
         reviewers_process = subprocess.run(
-            [sys.executable, analyze_script_path, args.submissions_csv_path],
+            analyze_script_args,
             check=True,  # This will raise an exception if the script fails
             capture_output=True,
             text=True
         )
         reviewers_output = reviewers_process.stdout
-        
+
         # Step 2: Call extract_review_declines.py and capture its stdout
         extract_script_path = os.path.join(script_dir, "extract_review_declines.py")
         declines_process = subprocess.run(
@@ -48,7 +52,7 @@ def main():
         declines_output = declines_process.stdout
 
         # Step 3: Process the output from both scripts
-        
+
         # Read the reviewers data (names and counts) from stdout
         reviewer_counts = {}
         with io.StringIO(reviewers_output) as f:
@@ -80,7 +84,7 @@ def main():
                     'reviewer_count': reviewer_counts.get(name)
                 })
                 found_matches = True
-        
+
         if not found_matches:
             print("No matching names found with a reviewer count greater than zero.")
 
