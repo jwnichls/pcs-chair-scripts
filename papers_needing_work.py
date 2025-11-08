@@ -25,6 +25,7 @@ def analyze_csv(input_filepath):
         missing_reviewer_counts = defaultdict(int)
         total_reviewer_counts = defaultdict(int)
         overcommitted_reviewer_counts = defaultdict(int)
+        meta_reviews_completed_counts = defaultdict(int)
         pc_completed_reviews_counts = defaultdict(int)
         completed_reviews_counts = defaultdict(int)
         reviewer_subcommittee = defaultdict(str)
@@ -35,7 +36,8 @@ def analyze_csv(input_filepath):
             header = next(reader)  # Read the header row
 
             # Find the indices of Pname, Decision, and all E<number>name/E<number>score columns
-            s1_name_index = -1
+            p_name_index = -1
+            p_score_index = -1
             decision_index = -1
             subcommittee_index = -1
             pc_columns = [] # A list of tuples: (name_index, score_index)
@@ -43,7 +45,9 @@ def analyze_csv(input_filepath):
 
             for i, column_name in enumerate(header):
                 if column_name == 'Pname':
-                    s1_name_index = i
+                    p_name_index = i
+                elif column_name == 'PReviewer Recommendation':
+                    p_score_index = i
                 elif column_name == 'Decision':
                     decision_index = i
                 elif column_name == 'Subcommittee':
@@ -69,7 +73,7 @@ def analyze_csv(input_filepath):
                         # Skip if the corresponding score column is not found
                         continue
 
-            if s1_name_index == -1:
+            if p_name_index == -1:
                 print("Error: The CSV file must contain an 'Pname' column.", file=sys.stderr)
                 return
             if decision_index == -1:
@@ -81,10 +85,10 @@ def analyze_csv(input_filepath):
 
                 # Check the Decision column before processing the row
                 decision_value = row[decision_index].strip()
-                if decision_value not in ["RER", "ERER"]:
+                if decision_value not in ["RER", "ERER", "A-N", "Minor-N", "Major-N", "R-N", "T"]:
                     continue  # Skip this row if the decision is not RER or ERER
 
-                s1_name_value = row[s1_name_index]
+                s1_name_value = row[p_name_index]
                 if s1_name_value not in low_reviewer_counts:
                     total_paper_counts[s1_name_value] = 0
                     low_reviewer_counts[s1_name_value] = 0
@@ -95,12 +99,16 @@ def analyze_csv(input_filepath):
                     pc_completed_reviews_counts[s1_name_value] = 0
                     completed_reviews_counts[s1_name_value] = 0
                     reviewer_subcommittee[s1_name_value] = row[subcommittee_index]
+                    meta_reviews_completed_counts[s1_name_value] = 0
                     
 
                 confirmed_reviewers = 0
                 tentative_reviewers = 0
                 completed_reviewers = 0
                 pc_completed = 0
+
+                if row[p_score_index] != "":
+                    meta_reviews_completed_counts[s1_name_value] += 1
 
                 # Iterate through all identified reviewer columns to count confirmed reviewers
                 for name_idx, score_idx in reviewer_columns:
@@ -149,7 +157,9 @@ def analyze_csv(input_filepath):
             'Missing Reviewers', 
             'Assigned Reviewers', 
             'Completed External Reviews', 
-            'Completed PC Reviews'])
+            'Completed PC Reviews',
+            'Completed Meta Reviews',
+        ])
         for s1_name, count in sorted(low_reviewer_counts.items()):
             writer.writerow([
                 s1_name,
@@ -162,6 +172,7 @@ def analyze_csv(input_filepath):
                 total_reviewer_counts[s1_name],
                 completed_reviews_counts[s1_name],
                 pc_completed_reviews_counts[s1_name],
+                meta_reviews_completed_counts[s1_name],
             ])
 
     except FileNotFoundError:
